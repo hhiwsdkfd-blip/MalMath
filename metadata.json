@@ -1,0 +1,6 @@
+{
+  "name": "الآلة الحاسبة العلمية",
+  "description": "آلة حاسبة علمية متقدمة بشاشة عرض طبيعي، تدعم حل المعادلات، المصفوفات، المتجهات، الأعداد المركبة، التفاضل والتكامل، والإحصاء والرسوم البيانية ومشاركة QR Code.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

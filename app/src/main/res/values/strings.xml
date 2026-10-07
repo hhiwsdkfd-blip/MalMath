@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">الحاسبة العلمية</string>
+    <string name="mode_calc">الحساب العادي</string>
+    <string name="mode_complex">الأعداد المركبة</string>
+    <string name="mode_base_n">الأنظمة العددية</string>
+    <string name="mode_matrix">المصفوفات</string>
+    <string name="mode_vector">المتجهات</string>
+    <string name="mode_statistics">الإحصاء</string>
+    <string name="mode_table">جدول الدوال والرسم</string>
+    <string name="mode_equation">حل المعادلات</string>
+    <string name="natural_display">عرض طبيعي (Natural Textbook)</string>
+    <string name="solar_status">طاقة شمسية نشطة</string>
+    <string name="battery_status">البطارية</string>
+    <string name="qr_code_title">رمز QR للنتيجة</string>
+    <string name="qr_code_desc">امسح الرمز بواسطة هاتفك لمشاركة المسألة أو عرض تفاصيل الرسم البياني</string>
+</resources>
