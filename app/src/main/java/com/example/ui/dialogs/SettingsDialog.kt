@@ -197,7 +197,7 @@ fun SettingsDialog(
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
-                                text = "CLASS-CALC Scientific",
+                                text = "CLASS-CALC Scientific (Kotlin Edition)",
                                 fontWeight = FontWeight.Bold,
                                 color = KeyShiftGold,
                                 fontSize = 12.sp,
@@ -206,9 +206,9 @@ fun SettingsDialog(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = if (isArabic)
-                                    "آلة حاسبة علمية متقدمة تدعم العرض الطبيعي للمعادلات، المصفوفات، المتجهات، الأعداد المركبة، التفاضل والتكامل، والإحصاء ومشاركة رمز QR."
+                                    "آلة حاسبة علمية متقدمة مبنية 100% بلغة كوتلن (Kotlin) و Jetpack Compose، تدعم العرض الطبيعي للمعادلات، المصفوفات، المتجهات، الأعداد المركبة، التفاضل والتكامل، والإحصاء ومشاركة رمز QR."
                                 else
-                                    "Advanced scientific calculator with Natural Textbook Display, Matrices, Vectors, Complex Numbers, Calculus, Statistics, and QR Code generation.",
+                                    "Advanced scientific calculator built 100% in pure Kotlin & Jetpack Compose, with Natural Textbook Display, Matrices, Vectors, Complex Numbers, Calculus, Statistics, and QR Code sharing.",
                                 fontSize = 10.5.sp,
                                 color = Color(0xFF90A4AE),
                                 lineHeight = 15.sp

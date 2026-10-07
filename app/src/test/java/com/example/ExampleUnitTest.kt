@@ -122,6 +122,10 @@ class ExampleUnitTest {
         // pol(3, 4) = 5
         val polVal = eval.evaluate("pol(3, 4)")
         assertEquals(5.0, polVal.decimalValue, 1e-9)
+
+        // Kotlin math syntax compatibility
+        val kotlinMathVal = eval.evaluate("kotlin.math.sqrt(64) + pow(2, 3)")
+        assertEquals(16.0, kotlinMathVal.decimalValue, 1e-9)
     }
 
     @Test

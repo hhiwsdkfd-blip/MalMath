@@ -69,10 +69,13 @@ class MathEvaluator(
 
     private fun preprocessExpression(expr: String, xValue: Double?): String {
         var s = expr
+            .replace("kotlin.math.", "")
+            .replace("Math.", "")
             .replace("×", "*")
             .replace("÷", "/")
             .replace("−", "-")
             .replace("π", Math.PI.toString())
+            .replace("PI", Math.PI.toString())
 
         if (xValue != null) {
             s = s.replace(Regex("\\bx\\b", RegexOption.IGNORE_CASE), "($xValue)")
@@ -376,6 +379,10 @@ class ExpressionParser(
             "ceil" -> ceil(a)
             "round" -> round(a)
             "exp" -> exp(a)
+            "pow" -> a.pow(b)
+            "hypot" -> hypot(a, b)
+            "min" -> min(a, b)
+            "max" -> max(a, b)
             "mod" -> a % b
             "divr" -> floor(a / b)
             "pol" -> hypot(a, b) // magnitude
