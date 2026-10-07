@@ -32,11 +32,14 @@ val KeyFunctionBorder = Color(0xFF37474F)
 val KeyNumberBg = Color(0xFF1C222A)
 val KeyNumberText = Color(0xFFFFFFFF)
 
-val KeyActionClearBg = Color(0xFFD32F2F)
+val KeyActionClearBg = Color(0xFF1976D2)
 val KeyActionClearText = Color(0xFFFFFFFF)
 
-val KeyActionDelBg = Color(0xFFE65100)
+val KeyActionDelBg = Color(0xFF1976D2)
 val KeyActionDelText = Color(0xFFFFFFFF)
+
+val KeyCategoryOrangeBg = Color(0xFFEAA539)
+val KeySecondarySlateBg = Color(0xFF283643)
 
 val KeyEqualsBg = Color(0xFF0288D1)
 val KeyEqualsText = Color(0xFFFFFFFF)

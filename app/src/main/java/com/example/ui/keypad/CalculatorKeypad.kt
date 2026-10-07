@@ -3,688 +3,786 @@ package com.example.ui.keypad
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.*
 
+data class KeyConfig(
+    val main: String,
+    val shift: String? = null,
+    val alpha: String? = null,
+    val tag: String,
+    val bgColor: Color = KeySecondarySlateBg,
+    val textColor: Color = KeyNumberText,
+    val fontSize: TextUnit = 13.5.sp,
+    val isItalic: Boolean = false,
+    val isPrimaryAction: Boolean = false
+)
+
+@Composable
+fun KeypadButton(
+    config: KeyConfig,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp = 40.dp
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 1.5.dp, vertical = 1.5.dp)
+            .testTag(config.tag),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Shift & Alpha labels above key
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(11.dp)
+                .padding(horizontal = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = config.shift ?: "",
+                color = Color(0xFFF6C445),
+                fontSize = 7.5.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1
+            )
+            Text(
+                text = config.alpha ?: "",
+                color = Color(0xFFEA5B4B),
+                fontSize = 7.5.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1
+            )
+        }
+
+        // Main Beveled Surface
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(color = Color.White.copy(alpha = 0.25f))
+                ) { onClick() },
+            shape = RoundedCornerShape(6.dp),
+            color = config.bgColor,
+            shadowElevation = 1.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF384958))
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 2.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = config.main,
+                    color = config.textColor,
+                    fontSize = config.fontSize,
+                    fontWeight = if (config.isPrimaryAction) FontWeight.Black else FontWeight.Bold,
+                    fontStyle = if (config.isItalic) FontStyle.Italic else FontStyle.Normal,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    lineHeight = 13.sp
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun CalculatorKeypad(
+    isSecondMode: Boolean,
+    onToggleSecondMode: () -> Unit,
     isShiftActive: Boolean,
     isAlphaActive: Boolean,
-    isSecondActive: Boolean,
-    isHypActive: Boolean,
     onKeyPress: (String) -> Unit,
     onShiftClick: () -> Unit,
     onAlphaClick: () -> Unit,
-    onSecondClick: () -> Unit,
-    onHypClick: () -> Unit,
     onMenuClick: () -> Unit,
-    onOptionClick: () -> Unit,
     onConstClick: () -> Unit,
     onConvClick: () -> Unit,
     onHelpClick: () -> Unit,
     onCopyClick: () -> Unit,
     onPasteClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     onCursorLeft: () -> Unit,
     onCursorRight: () -> Unit,
-    onHistoryUp: () -> Unit,
-    onHistoryDown: () -> Unit,
+    onCursorUp: () -> Unit,
+    onCursorDown: () -> Unit,
     onDelete: () -> Unit,
     onAllClear: () -> Unit,
     onEquals: () -> Unit,
     onSdToggle: () -> Unit,
+    onCategoryClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp)
+            .background(Color(0xFF141920))
+            .padding(horizontal = 2.dp, vertical = 2.dp)
             .testTag("calculator_keypad")
     ) {
-        // --- 1. TOP CONTROL BAR (Shift, Alpha, D-Pad, Menu, Optn) ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Left: Shift and Alpha
-            Column(
-                modifier = Modifier.width(68.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                SmallPillButton(
-                    label = "SHIFT",
-                    textColor = if (isShiftActive) Color.Black else KeyShiftGold,
-                    bgColor = if (isShiftActive) KeyShiftGold else KeyShiftGoldBg,
-                    tag = "key_shift",
-                    onClick = onShiftClick
+        if (!isSecondMode) {
+            // ==========================================
+            // SCREEN 2: 1st MODE (Primary Casio Keypad)
+            // ==========================================
+
+            // Row 0: SHIFT, ALPHA, ←, →, MODE, 2nd
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig(
+                        main = "SHIFT",
+                        tag = "key_shift",
+                        bgColor = if (isShiftActive) Color(0xFFFFB300) else Color(0xFFFBA41A),
+                        textColor = Color.Black,
+                        fontSize = 12.sp
+                    ),
+                    onClick = onShiftClick,
+                    modifier = Modifier.weight(1f)
                 )
-                SmallPillButton(
-                    label = "ALPHA",
-                    textColor = if (isAlphaActive) Color.White else KeyAlphaPink,
-                    bgColor = if (isAlphaActive) KeyAlphaPink else KeyAlphaPinkBg,
-                    tag = "key_alpha",
-                    onClick = onAlphaClick
+                KeypadButton(
+                    config = KeyConfig(
+                        main = "ALPHA",
+                        tag = "key_alpha",
+                        bgColor = if (isAlphaActive) Color(0xFFFF5722) else Color(0xFFE24A24),
+                        textColor = Color.White,
+                        fontSize = 12.sp
+                    ),
+                    onClick = onAlphaClick,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("←", tag = "key_left", fontSize = 16.sp),
+                    onClick = onCursorLeft,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("→", tag = "key_right", fontSize = 16.sp),
+                    onClick = onCursorRight,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("MODE", tag = "key_mode", fontSize = 11.5.sp),
+                    onClick = onMenuClick,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("2nd", tag = "key_2nd_toggle", isItalic = true, fontSize = 14.sp),
+                    onClick = onToggleSecondMode,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Row 1: CALC, ∫dx, ▲, ▼, x⁻¹, Logₐx
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("CALC", shift = "SOLVE", alpha = "=", tag = "key_calc"),
+                    onClick = { onKeyPress(if (isShiftActive) "solve(" else "CALC") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("∫dx", shift = "d/dx", alpha = ":", tag = "key_integral"),
+                    onClick = { onKeyPress(if (isShiftActive) "diff(" else "integrate(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("▲", tag = "key_up", fontSize = 14.sp),
+                    onClick = onCursorUp,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("▼", tag = "key_down", fontSize = 14.sp),
+                    onClick = onCursorDown,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("x⁻¹", shift = "x!", tag = "key_inv"),
+                    onClick = { onKeyPress(if (isShiftActive) "!" else "^(-1)") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Logₐx", shift = "Σ", alpha = "Π", tag = "key_log_ab", fontSize = 12.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "sum(" else "log(") },
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            // Center: Circular Metallic D-Pad Replay Wheel
-            ReplayDpadWheel(
-                onUp = onHistoryUp,
-                onDown = onHistoryDown,
-                onLeft = onCursorLeft,
-                onRight = onCursorRight
-            )
-
-            // Right: Menu/Setup and OPTN
-            Column(
-                modifier = Modifier.width(68.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                SmallPillButton(
-                    label = "MENU",
-                    subLabel = "MODE",
-                    textColor = Color.White,
-                    bgColor = KeyFunctionBg,
-                    tag = "key_menu",
-                    onClick = onMenuClick
+            // Row 2: ■/■, √■, x², x^□, Log, Ln
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("■/■", shift = "mod", alpha = "÷R", tag = "key_frac", fontSize = 12.sp),
+                    onClick = {
+                        val token = when {
+                            isShiftActive -> "mod("
+                            isAlphaActive -> "divr("
+                            else -> "/"
+                        }
+                        onKeyPress(token)
+                    },
+                    modifier = Modifier.weight(1f)
                 )
-                SmallPillButton(
-                    label = "OPTN",
-                    subLabel = "SETUP",
-                    textColor = Color.White,
-                    bgColor = KeyFunctionBg,
-                    tag = "key_optn",
-                    onClick = onOptionClick
+                KeypadButton(
+                    config = KeyConfig("√■", shift = "³√□", tag = "key_sqrt"),
+                    onClick = { onKeyPress(if (isShiftActive) "cbrt(" else "sqrt(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("x²", shift = "x³", tag = "key_sqr"),
+                    onClick = { onKeyPress(if (isShiftActive) "^3" else "^2") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("x^□", shift = "ⁿ√□", tag = "key_pow"),
+                    onClick = { onKeyPress("^") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Log", shift = "10^x", tag = "key_log"),
+                    onClick = { onKeyPress(if (isShiftActive) "10^" else "log(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Ln", shift = "e^x", tag = "key_ln"),
+                    onClick = { onKeyPress(if (isShiftActive) "exp(" else "ln(") },
+                    modifier = Modifier.weight(1f)
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(2.dp))
+            // Row 3: (-), ° ′ ″, hyp, Sin, Cos, Tan
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("(-)", shift = "∠", alpha = "a", tag = "key_neg"),
+                    onClick = { onKeyPress(if (isAlphaActive) "a" else "-") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("° ′ ″", shift = "FACT", alpha = "b", tag = "key_dms"),
+                    onClick = { onKeyPress(if (isAlphaActive) "b" else "dms(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("hyp", shift = "Abs", alpha = "c", tag = "key_hyp"),
+                    onClick = { onKeyPress(if (isShiftActive) "abs(" else if (isAlphaActive) "c" else "sinh(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Sin", shift = "Sin⁻¹", alpha = "d", tag = "key_sin"),
+                    onClick = { onKeyPress(if (isShiftActive) "asin(" else if (isAlphaActive) "d" else "sin(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Cos", shift = "Cos⁻¹", alpha = "e", tag = "key_cos"),
+                    onClick = { onKeyPress(if (isShiftActive) "acos(" else if (isAlphaActive) "e" else "cos(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Tan", shift = "Tan⁻¹", alpha = "f", tag = "key_tan"),
+                    onClick = { onKeyPress(if (isShiftActive) "atan(" else if (isAlphaActive) "f" else "tan(") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // --- 1.5 SECONDARY SCIENTIFIC EXTENSION BAR (2nd, hyp, mod, ÷R, Abs, GCD, LCM, PreAns, COPY, PASTE, HELP) ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(vertical = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            SmallPillButton(
-                label = "2nd",
-                textColor = if (isSecondActive) Color.Black else PrimaryCyan,
-                bgColor = if (isSecondActive) PrimaryCyan else Color(0xFF1E2631),
-                tag = "key_2nd",
-                onClick = onSecondClick,
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "hyp",
-                textColor = if (isHypActive) Color.Black else KeyShiftGold,
-                bgColor = if (isHypActive) KeyShiftGold else Color(0xFF1E2631),
-                tag = "key_hyp",
-                onClick = onHypClick,
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "mod",
-                textColor = Color.White,
-                bgColor = KeyFunctionBg,
-                tag = "key_mod",
-                onClick = { onKeyPress("mod(") },
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "÷R",
-                textColor = Color.White,
-                bgColor = KeyFunctionBg,
-                tag = "key_div_r",
-                onClick = { onKeyPress("divr(") },
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "Abs",
-                textColor = Color.White,
-                bgColor = KeyFunctionBg,
-                tag = "key_abs",
-                onClick = { onKeyPress("abs(") },
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "GCD",
-                textColor = Color.White,
-                bgColor = KeyFunctionBg,
-                tag = "key_gcd",
-                onClick = { onKeyPress("gcd(") },
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "LCM",
-                textColor = Color.White,
-                bgColor = KeyFunctionBg,
-                tag = "key_lcm",
-                onClick = { onKeyPress("lcm(") },
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "PreAns",
-                textColor = KeyShiftGold,
-                bgColor = KeyFunctionBg,
-                tag = "key_preans",
-                onClick = { onKeyPress("preans") },
-                width = 62.dp
-            )
-            SmallPillButton(
-                label = "COPY",
-                textColor = Color.LightGray,
-                bgColor = KeyFunctionBg,
-                tag = "key_copy",
-                onClick = onCopyClick,
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "PASTE",
-                textColor = Color.LightGray,
-                bgColor = KeyFunctionBg,
-                tag = "key_paste",
-                onClick = onPasteClick,
-                width = 54.dp
-            )
-            SmallPillButton(
-                label = "CONST",
-                textColor = KeyShiftGold,
-                bgColor = KeyFunctionBg,
-                tag = "key_const_top",
-                onClick = onConstClick,
-                width = 60.dp
-            )
-            SmallPillButton(
-                label = "CONV",
-                textColor = PrimaryCyan,
-                bgColor = KeyFunctionBg,
-                tag = "key_conv_top",
-                onClick = onConvClick,
-                width = 58.dp
-            )
-            SmallPillButton(
-                label = "HELP",
-                textColor = Color(0xFF81C784),
-                bgColor = KeyFunctionBg,
-                tag = "key_help",
-                onClick = onHelpClick,
-                width = 54.dp
-            )
-        }
+            // Row 4: RCL, ENG, (, ), S⇔D, M+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("RCL", shift = "STO", alpha = "CLRv", tag = "key_rcl"),
+                    onClick = { onKeyPress(if (isShiftActive) "STO" else if (isAlphaActive) "CLR" else "RCL") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("ENG", shift = "i", alpha = "Cot", tag = "key_eng"),
+                    onClick = { onKeyPress(if (isShiftActive) "i" else if (isAlphaActive) "cot(" else "ENG") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("(", shift = "%", alpha = "Cot⁻¹", tag = "key_lparen"),
+                    onClick = { onKeyPress(if (isShiftActive) "%" else if (isAlphaActive) "acot(" else "(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig(")", shift = ",", alpha = "x", tag = "key_rparen"),
+                    onClick = { onKeyPress(if (isShiftActive) "," else if (isAlphaActive) "x" else ")") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("S⇔D", shift = "a b/c", alpha = "y", tag = "key_sd", textColor = PrimaryCyan),
+                    onClick = onSdToggle,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("M+", shift = "M-", alpha = "m", tag = "key_mplus"),
+                    onClick = { onKeyPress(if (isShiftActive) "M-" else if (isAlphaActive) "m" else "M+") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-        // --- 2. SCIENTIFIC FUNCTION ROW 1 ---
-        // CALC, ∫dx, x⁻¹, log_a(b), Fraction, √( )
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("CALC", shift = "SOLVE", alpha = "=", tag = "key_calc", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress("CALC") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("∫dx", shift = "d/dx", alpha = ":", tag = "key_integral", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "diff(" else "integrate(") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("x⁻¹", shift = "x!", tag = "key_inv", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "!" else "^(-1)") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("logₐb", shift = "Σ", tag = "key_log_ab", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "sum(" else "log(") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("分数", shift = "a b/c", tag = "key_frac", bgColor = KeyFunctionBg, fontSize = 13.sp),
-                onClick = { onKeyPress("/") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("√□", shift = "∛□", tag = "key_sqrt", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "cbrt(" else "sqrt(") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 5: 7, 8, 9, DEL, AC
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("7", shift = "CONST", tag = "key_7", fontSize = 18.sp),
+                    onClick = { if (isShiftActive) onConstClick() else onKeyPress("7") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("8", shift = "CONV", tag = "key_8", fontSize = 18.sp),
+                    onClick = { if (isShiftActive) onConvClick() else onKeyPress("8") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("9", shift = "∞", tag = "key_9", fontSize = 18.sp),
+                    onClick = { onKeyPress("9") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("DEL", tag = "key_del", bgColor = Color(0xFF1976D2), textColor = Color.White, fontSize = 16.sp, isPrimaryAction = true),
+                    onClick = onDelete,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("AC", tag = "key_ac", bgColor = Color(0xFF1976D2), textColor = Color.White, fontSize = 16.sp, isPrimaryAction = true),
+                    onClick = onAllClear,
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // --- 3. SCIENTIFIC FUNCTION ROW 2 ---
-        // x², x^□, log, ln, (-), ° ' "
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("x²", shift = "x³", tag = "key_sqr", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "^3" else "^2") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("x^□", shift = "ⁿ√", tag = "key_pow", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress("^") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("log", shift = "10^x", tag = "key_log", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "10^" else "log(") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("ln", shift = "e^x", tag = "key_ln", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "exp(" else "ln(") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("(-)", shift = "A", alpha = "A", tag = "key_neg", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isAlphaActive) "A" else "-") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("° ' \"", shift = "B", alpha = "B", tag = "key_dms", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isAlphaActive) "B" else "dms(") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 6: 4, 5, 6, ×, ÷
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("4", shift = "MATRIX", tag = "key_4", fontSize = 18.sp),
+                    onClick = { onKeyPress("4") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("5", shift = "VECTOR", tag = "key_5", fontSize = 18.sp),
+                    onClick = { onKeyPress("5") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("6", shift = "HELP", tag = "key_6", fontSize = 18.sp),
+                    onClick = { if (isShiftActive) onHelpClick() else onKeyPress("6") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("×", shift = "nPr", alpha = "GCD", tag = "key_mul", fontSize = 20.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "nPr(" else if (isAlphaActive) "gcd(" else "*") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("÷", shift = "nCr", alpha = "LCM", tag = "key_div", fontSize = 20.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "nCr(" else if (isAlphaActive) "lcm(" else "/") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // --- 4. SCIENTIFIC FUNCTION ROW 3 ---
-        // x, sin, cos, tan, STO, ENG
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("x", shift = "C", alpha = "x", tag = "key_var_x", bgColor = KeyFunctionBg, textColor = KeyAlphaPink),
-                onClick = { onKeyPress("x") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig(
-                    main = if (isHypActive) "sinh" else "sin",
-                    shift = if (isHypActive) "asinh" else "sin⁻¹",
-                    alpha = "D",
-                    tag = "key_sin",
-                    bgColor = KeyFunctionBg
-                ),
-                onClick = {
-                    val token = when {
-                        isHypActive && isShiftActive -> "asinh("
-                        isHypActive -> "sinh("
-                        isShiftActive -> "asin("
-                        isAlphaActive -> "D"
-                        else -> "sin("
-                    }
-                    onKeyPress(token)
-                },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig(
-                    main = if (isHypActive) "cosh" else "cos",
-                    shift = if (isHypActive) "acosh" else "cos⁻¹",
-                    alpha = "E",
-                    tag = "key_cos",
-                    bgColor = KeyFunctionBg
-                ),
-                onClick = {
-                    val token = when {
-                        isHypActive && isShiftActive -> "acosh("
-                        isHypActive -> "cosh("
-                        isShiftActive -> "acos("
-                        isAlphaActive -> "E"
-                        else -> "cos("
-                    }
-                    onKeyPress(token)
-                },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig(
-                    main = if (isHypActive) "tanh" else "tan",
-                    shift = if (isHypActive) "atanh" else "tan⁻¹",
-                    alpha = "F",
-                    tag = "key_tan",
-                    bgColor = KeyFunctionBg
-                ),
-                onClick = {
-                    val token = when {
-                        isHypActive && isShiftActive -> "atanh("
-                        isHypActive -> "tanh("
-                        isShiftActive -> "atan("
-                        isAlphaActive -> "F"
-                        else -> "tan("
-                    }
-                    onKeyPress(token)
-                },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig(
-                    main = if (isSecondActive) "cot" else "STO",
-                    shift = if (isSecondActive) "cot⁻¹" else "RCL",
-                    tag = "key_sto",
-                    bgColor = KeyFunctionBg
-                ),
-                onClick = {
-                    if (isSecondActive) {
-                        onKeyPress(if (isShiftActive) "acot(" else "cot(")
-                    } else {
-                        onKeyPress(if (isShiftActive) "RCL" else "STO")
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("ENG", shift = "←", tag = "key_eng", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress("ENG") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 7: 1, 2, 3, +, −
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("1", shift = "STAT", tag = "key_1", fontSize = 18.sp),
+                    onClick = { onKeyPress("1") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("2", shift = "CMPLX", tag = "key_2", fontSize = 18.sp),
+                    onClick = { onKeyPress("2") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("3", shift = "DISTR", tag = "key_3", fontSize = 18.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "distr(" else "3") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("+", shift = "Pol", alpha = "Ceil", tag = "key_plus", fontSize = 20.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "pol(" else if (isAlphaActive) "ceil(" else "+") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("−", shift = "Rec", alpha = "Floor", tag = "key_minus", fontSize = 20.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "rec(" else if (isAlphaActive) "floor(" else "-") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // --- 5. SCIENTIFIC FUNCTION ROW 4 ---
-        // (, ), S⇔D, M+
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("(", shift = "%", alpha = "Y", tag = "key_lparen", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "%" else if (isAlphaActive) "Y" else "(") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig(")", shift = ",", alpha = "Z", tag = "key_rparen", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "," else if (isAlphaActive) "Z" else ")") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("S⇔D", shift = "a b/c", tag = "key_sd", bgColor = KeyFunctionBg, textColor = PrimaryCyan),
-                onClick = onSdToggle,
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("M+", shift = "M-", alpha = "M", tag = "key_mplus", bgColor = KeyFunctionBg),
-                onClick = { onKeyPress(if (isShiftActive) "M-" else if (isAlphaActive) "M" else "M+") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 8: 0, ., Exp, Ans, =
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("0", shift = "COPY", alpha = "PASTE", tag = "key_0", fontSize = 18.sp),
+                    onClick = {
+                        if (isShiftActive) onCopyClick()
+                        else if (isAlphaActive) onPasteClick()
+                        else onKeyPress("0")
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig(".", shift = "Ran#", alpha = "RanInt", tag = "key_dot", fontSize = 20.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "Ran#" else if (isAlphaActive) "ranint(" else ".") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Exp", shift = "π", alpha = "e", tag = "key_exp", fontSize = 14.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "π" else if (isAlphaActive) "e" else "*10^") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Ans", shift = "PreAns", tag = "key_ans", fontSize = 14.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "preans" else "Ans") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("=", shift = "History", tag = "key_equals", fontSize = 22.sp),
+                    onClick = { if (isShiftActive) onHistoryClick() else onEquals() },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        } else {
+            // ==========================================
+            // SCREEN 1: 2nd MODE (Secondary Advanced Keypad)
+            // ==========================================
 
-        Spacer(modifier = Modifier.height(2.dp))
+            // Row 0: SHIFT, ALPHA, { }, x, y, 1st
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("SHIFT", tag = "key_shift_2nd", bgColor = if (isShiftActive) Color(0xFFFFB300) else Color(0xFFFBA41A), textColor = Color.Black, fontSize = 12.sp),
+                    onClick = onShiftClick,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("ALPHA", tag = "key_alpha_2nd", bgColor = if (isAlphaActive) Color(0xFFFF5722) else Color(0xFFE24A24), textColor = Color.White, fontSize = 12.sp),
+                    onClick = onAlphaClick,
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("{ }", tag = "key_braces", fontSize = 13.sp),
+                    onClick = { onKeyPress("{") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("x", tag = "key_var_x_2nd", fontSize = 14.sp),
+                    onClick = { onKeyPress("x") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("y", tag = "key_var_y_2nd", fontSize = 14.sp),
+                    onClick = { onKeyPress("y") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("1st", tag = "key_1st_toggle", isItalic = true, fontSize = 14.sp),
+                    onClick = onToggleSecondMode,
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // --- 6. NUMERIC KEYPAD & STANDARD OPERATIONS ---
-        // Row 1: 7, 8, 9, DEL, AC
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("7", shift = "CONST", tag = "key_7", fontSize = 18.sp),
-                onClick = { if (isShiftActive) onConstClick() else onKeyPress("7") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("8", shift = "CONV", tag = "key_8", fontSize = 18.sp),
-                onClick = { if (isShiftActive) onConvClick() else onKeyPress("8") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("9", shift = "CLR", tag = "key_9", fontSize = 18.sp),
-                onClick = { if (isShiftActive) onKeyPress("CLR") else onKeyPress("9") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("DEL", shift = "INS", tag = "key_del", bgColor = KeyActionDelBg, textColor = KeyActionDelText),
-                onClick = onDelete,
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("AC", shift = "OFF", tag = "key_ac", bgColor = KeyActionClearBg, textColor = KeyActionClearText, isPrimaryAction = true),
-                onClick = onAllClear,
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 1: ∫, d/dx, FACTOR, EXPAND, SIMPLY, GRAPH
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("∫", tag = "key_2nd_integral", fontSize = 16.sp),
+                    onClick = { onKeyPress("integrate(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("d/dx", shift = "Divisors", tag = "key_2nd_diff", fontSize = 12.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "divisors(" else "diff(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("FACTOR", shift = "Prime", tag = "key_factor", fontSize = 10.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "prime(" else "factor(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("EXPAND", shift = "Solve", tag = "key_expand", fontSize = 10.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "solve(" else "expand(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("SIMPLY", tag = "key_simply", fontSize = 10.sp),
+                    onClick = { onKeyPress("simplify(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("GRAPH", tag = "key_graph", fontSize = 10.sp),
+                    onClick = { onCategoryClick("GRAPH") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // Row 2: 4, 5, 6, ×, ÷
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("4", shift = "MATRIX", tag = "key_4", fontSize = 18.sp),
-                onClick = { onKeyPress("4") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("5", shift = "VECTOR", tag = "key_5", fontSize = 18.sp),
-                onClick = { onKeyPress("5") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("6", shift = "VERIF", tag = "key_6", fontSize = 18.sp),
-                onClick = { onKeyPress("6") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("×", shift = "nPr", tag = "key_mul", bgColor = KeyFunctionBg, fontSize = 20.sp),
-                onClick = { onKeyPress(if (isShiftActive) "nPr(" else "*") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("÷", shift = "nCr", tag = "key_div", bgColor = KeyFunctionBg, fontSize = 20.sp),
-                onClick = { onKeyPress(if (isShiftActive) "nCr(" else "/") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 2: Conju, Gamma, dot, Cross, Vector Angle, Euclid Distance
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("Conju", shift = "Re", alpha = "Im", tag = "key_conju", fontSize = 10.5.sp),
+                    onClick = { onKeyPress("conj(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Gamma", shift = "Arg", alpha = "i", tag = "key_gamma", fontSize = 10.5.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "arg(" else "gamma(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("dot", shift = "Projection", tag = "key_dot_vec", fontSize = 11.5.sp),
+                    onClick = { onKeyPress("dot(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Cross", shift = "Norm", tag = "key_cross_vec", fontSize = 11.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "norm(" else "cross(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Vector\nAngle", shift = "Normalize", tag = "key_vec_angle", fontSize = 9.sp),
+                    onClick = { onKeyPress("vangle(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Euclid\nDistance", tag = "key_euclid_dist", fontSize = 8.5.sp),
+                    onClick = { onKeyPress("dist(") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // Row 3: 1, 2, 3, +, −
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("1", shift = "STAT", tag = "key_1", fontSize = 18.sp),
-                onClick = { onKeyPress("1") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("2", shift = "CMPLX", tag = "key_2", fontSize = 18.sp),
-                onClick = { onKeyPress("2") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("3", shift = "BASE", tag = "key_3", fontSize = 18.sp),
-                onClick = { onKeyPress("3") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("+", shift = "Pol", tag = "key_plus", bgColor = KeyFunctionBg, fontSize = 20.sp),
-                onClick = { onKeyPress(if (isShiftActive) "pol(" else "+") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("−", shift = "Rec", tag = "key_minus", bgColor = KeyFunctionBg, fontSize = 20.sp),
-                onClick = { onKeyPress(if (isShiftActive) "rec(" else "-") },
-                modifier = Modifier.weight(1f)
-            )
-        }
+            // Row 3: v(1×2), v(1×3), [3×1], [3×2], [3×3], [⋮ ⋮]
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("v(1×2)", shift = "[1×1]", tag = "key_v12", fontSize = 10.sp),
+                    onClick = { onKeyPress("[0, 0]") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("v(1×3)", shift = "[3×1]", tag = "key_v13", fontSize = 10.sp),
+                    onClick = { onKeyPress("[0, 0, 0]") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("[3×1]", shift = "[2×1]", tag = "key_m31", fontSize = 10.sp),
+                    onClick = { onKeyPress("[[0], [0], [0]]") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("[3×2]", shift = "[2×2]", tag = "key_m32", fontSize = 10.sp),
+                    onClick = { onKeyPress("[[0, 0], [0, 0], [0, 0]]") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("[3×3]", shift = "[2×3]", tag = "key_m33", fontSize = 10.sp),
+                    onClick = { onKeyPress("[[1, 0, 0], [0, 1, 0], [0, 0, 1]]") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("[⋮ ⋮]", shift = "[4×4]", tag = "key_m44", fontSize = 11.sp),
+                    onClick = { onKeyPress("[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-        // Row 4: 0, •, ×10ˣ, Ans, =
-        Row(modifier = Modifier.fillMaxWidth()) {
-            KeypadButton(
-                config = KeyConfig("0", shift = "Rnd", tag = "key_0", fontSize = 18.sp),
-                onClick = { onKeyPress("0") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("•", shift = "Ran#", alpha = "RanInt", tag = "key_dot", fontSize = 20.sp),
-                onClick = { onKeyPress(if (isShiftActive) "Ran#" else if (isAlphaActive) "ranint(" else ".") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("×10ˣ", shift = "π", alpha = "e", tag = "key_exp", bgColor = KeyFunctionBg, fontSize = 13.sp),
-                onClick = { onKeyPress(if (isShiftActive) "π" else if (isAlphaActive) "e" else "*10^") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("Ans", shift = "PreAns", tag = "key_ans", bgColor = KeyFunctionBg, fontSize = 14.sp),
-                onClick = { onKeyPress(if (isShiftActive) "preans" else "Ans") },
-                modifier = Modifier.weight(1f)
-            )
-            KeypadButton(
-                config = KeyConfig("=", tag = "key_equals", bgColor = KeyEqualsBg, textColor = KeyEqualsText, fontSize = 22.sp, isPrimaryAction = true),
-                onClick = onEquals,
-                modifier = Modifier.weight(1f)
-            )
+            // Row 4: Tr, Det, [ ]ᵀ, [ ]⁻¹, Eigenvalues, Eigenvectors
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("Tr", shift = "Transpose", tag = "key_tr", fontSize = 12.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "transpose(" else "tr(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Det", tag = "key_det_2nd", fontSize = 12.sp),
+                    onClick = { onKeyPress("det(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("[ ]ᵀ", tag = "key_transpose_sym", fontSize = 12.sp),
+                    onClick = { onKeyPress("ᵀ") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("[ ]⁻¹", shift = "Rank", tag = "key_inv_mat", fontSize = 12.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "rank(" else "⁻¹") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Eigen\nvalues", shift = "RowReduce", tag = "key_eigenval", fontSize = 9.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "rref(" else "eigenval(") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Eigen\nvectors", shift = "Diagonal", tag = "key_eigenvec", fontSize = 8.5.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "diag(" else "eigenvec(") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Row 5: r, s, t, u, v, z
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("r", tag = "key_var_r", fontSize = 15.sp),
+                    onClick = { onKeyPress("r") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("s", tag = "key_var_s", fontSize = 15.sp),
+                    onClick = { onKeyPress("s") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("t", shift = "(", tag = "key_var_t", fontSize = 15.sp),
+                    onClick = { onKeyPress(if (isShiftActive) "(" else "t") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("u", shift = ")", tag = "key_var_u", fontSize = 15.sp),
+                    onClick = { onKeyPress(if (isShiftActive) ")" else "u") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("v", shift = "DEL", tag = "key_var_v", fontSize = 15.sp),
+                    onClick = { if (isShiftActive) onDelete() else onKeyPress("v") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("z", shift = "AC", tag = "key_var_z", fontSize = 15.sp),
+                    onClick = { if (isShiftActive) onAllClear() else onKeyPress("z") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Row 6: and, or, xor, Not, True, False
+            Row(modifier = Modifier.fillMaxWidth()) {
+                KeypadButton(
+                    config = KeyConfig("and", shift = "<", alpha = "≤", tag = "key_and", fontSize = 13.sp),
+                    onClick = {
+                        val token = when {
+                            isShiftActive -> "<"
+                            isAlphaActive -> "<="
+                            else -> " and "
+                        }
+                        onKeyPress(token)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("or", shift = ">", alpha = "≥", tag = "key_or", fontSize = 13.sp),
+                    onClick = {
+                        val token = when {
+                            isShiftActive -> ">"
+                            isAlphaActive -> ">="
+                            else -> " or "
+                        }
+                        onKeyPress(token)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("xor", shift = "=", alpha = "≠", tag = "key_xor", fontSize = 13.sp),
+                    onClick = {
+                        val token = when {
+                            isShiftActive -> "=="
+                            isAlphaActive -> "!="
+                            else -> " xor "
+                        }
+                        onKeyPress(token)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("Not", shift = "Max", alpha = "Min", tag = "key_not_bool", fontSize = 12.sp),
+                    onClick = {
+                        val token = when {
+                            isShiftActive -> "max("
+                            isAlphaActive -> "min("
+                            else -> "not "
+                        }
+                        onKeyPress(token)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("True", shift = "Positive", tag = "key_true", fontSize = 12.sp),
+                    onClick = { onKeyPress("True") },
+                    modifier = Modifier.weight(1f)
+                )
+                KeypadButton(
+                    config = KeyConfig("False", shift = "Negative", tag = "key_false", fontSize = 12.sp),
+                    onClick = { onKeyPress("False") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            // Row 7 (Category Buttons Row 1): Combinatorics, Common, Algebra, Statistic
+            Row(modifier = Modifier.fillMaxWidth()) {
+                CategoryGridButton(label = "Combinat\norics", tag = "cat_btn_combinatorics", onClick = { onCategoryClick("Combinatorics") }, modifier = Modifier.weight(1f))
+                CategoryGridButton(label = "Common", tag = "cat_btn_common", onClick = { onCategoryClick("Common") }, modifier = Modifier.weight(1f))
+                CategoryGridButton(label = "Algebra", tag = "cat_btn_algebra", onClick = { onCategoryClick("Algebra") }, modifier = Modifier.weight(1f))
+                CategoryGridButton(label = "Statistic", tag = "cat_btn_statistic", onClick = { onCategoryClick("Statistic") }, modifier = Modifier.weight(1f))
+            }
+
+            // Row 8 (Category Buttons Row 2): Linear Algebra, Others, Number, Boolean
+            Row(modifier = Modifier.fillMaxWidth()) {
+                CategoryGridButton(label = "Linear\nAlgebra", tag = "cat_btn_linalg", onClick = { onCategoryClick("Linear Algebra") }, modifier = Modifier.weight(1f))
+                CategoryGridButton(label = "Others", tag = "cat_btn_others", onClick = { onCategoryClick("Others") }, modifier = Modifier.weight(1f))
+                CategoryGridButton(label = "Number", tag = "cat_btn_number", onClick = { onCategoryClick("Number") }, modifier = Modifier.weight(1f))
+                CategoryGridButton(label = "Boolean", tag = "cat_btn_boolean", onClick = { onCategoryClick("Boolean") }, modifier = Modifier.weight(1f))
+            }
         }
     }
 }
 
 @Composable
-private fun SmallPillButton(
+private fun CategoryGridButton(
     label: String,
-    subLabel: String? = null,
-    textColor: Color,
-    bgColor: Color,
     tag: String,
     onClick: () -> Unit,
-    width: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp.Unspecified
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = (if (width != androidx.compose.ui.unit.Dp.Unspecified) Modifier.width(width) else Modifier.fillMaxWidth())
-            .height(28.dp)
-            .clip(RoundedCornerShape(14.dp))
+        modifier = modifier
+            .padding(1.5.dp)
+            .height(38.dp)
+            .clip(RoundedCornerShape(6.dp))
             .clickable { onClick() }
             .testTag(tag),
-        shape = RoundedCornerShape(14.dp),
-        color = bgColor,
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF37474F))
+        shape = RoundedCornerShape(6.dp),
+        color = Color(0xFFEAA539),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD6942D))
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 text = label,
-                fontSize = 9.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = FontFamily.Monospace,
-                color = textColor
-            )
-            if (subLabel != null) {
-                Text(
-                    text = subLabel,
-                    fontSize = 6.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = KeyShiftGold
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReplayDpadWheel(
-    onUp: () -> Unit,
-    onDown: () -> Unit,
-    onLeft: () -> Unit,
-    onRight: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(76.dp)
-            .clip(CircleShape)
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(Color(0xFF37474F), Color(0xFF1E2631))
-                )
-            )
-            .border(2.dp, Color(0xFF546E7A), CircleShape)
-            .testTag("dpad_wheel"),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(30.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF101419))
-                .border(1.dp, Color(0xFF263238), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "REPLAY",
-                fontSize = 5.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF90A4AE),
-                fontFamily = FontFamily.Monospace
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .clickable { onUp() }
-                .padding(top = 4.dp)
-                .testTag("dpad_up")
-        ) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowUp,
-                contentDescription = "Up",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .clickable { onDown() }
-                .padding(bottom = 4.dp)
-                .testTag("dpad_down")
-        ) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Down",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .clickable { onLeft() }
-                .padding(start = 4.dp)
-                .testTag("dpad_left")
-        ) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowLeft,
-                contentDescription = "Left",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .clickable { onRight() }
-                .padding(end = 4.dp)
-                .testTag("dpad_right")
-        ) {
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "Right",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
+                color = Color.Black,
+                textAlign = TextAlign.Center,
+                lineHeight = 13.sp
             )
         }
     }

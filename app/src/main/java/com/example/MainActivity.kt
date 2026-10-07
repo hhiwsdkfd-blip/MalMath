@@ -161,10 +161,13 @@ fun CalculatorApp(viewModel: CalculatorViewModel) {
 
                 // Full Scientific Keypad
                 CalculatorKeypad(
+                    isSecondMode = state.isSecondActive,
+                    onToggleSecondMode = {
+                        performHaptic()
+                        viewModel.toggleSecond()
+                    },
                     isShiftActive = state.isShiftActive,
                     isAlphaActive = state.isAlphaActive,
-                    isSecondActive = state.isSecondActive,
-                    isHypActive = state.isHypActive,
                     onKeyPress = { token ->
                         performHaptic()
                         viewModel.onKeyPress(token)
@@ -177,21 +180,9 @@ fun CalculatorApp(viewModel: CalculatorViewModel) {
                         performHaptic()
                         viewModel.toggleAlpha()
                     },
-                    onSecondClick = {
-                        performHaptic()
-                        viewModel.toggleSecond()
-                    },
-                    onHypClick = {
-                        performHaptic()
-                        viewModel.toggleHyp()
-                    },
                     onMenuClick = {
                         performHaptic()
                         viewModel.setModeMenuOpen(true)
-                    },
-                    onOptionClick = {
-                        performHaptic()
-                        viewModel.setSettingsOpen(true)
                     },
                     onConstClick = {
                         performHaptic()
@@ -214,6 +205,10 @@ fun CalculatorApp(viewModel: CalculatorViewModel) {
                         performHaptic()
                         viewModel.pasteFromClipboard()
                     },
+                    onHistoryClick = {
+                        performHaptic()
+                        viewModel.setHistoryOpen(true)
+                    },
                     onCursorLeft = {
                         performHaptic()
                         viewModel.moveCursorLeft()
@@ -222,11 +217,11 @@ fun CalculatorApp(viewModel: CalculatorViewModel) {
                         performHaptic()
                         viewModel.moveCursorRight()
                     },
-                    onHistoryUp = {
+                    onCursorUp = {
                         performHaptic()
                         viewModel.historyUp()
                     },
-                    onHistoryDown = {
+                    onCursorDown = {
                         performHaptic()
                         viewModel.historyDown()
                     },
@@ -245,6 +240,18 @@ fun CalculatorApp(viewModel: CalculatorViewModel) {
                     onSdToggle = {
                         performHaptic()
                         viewModel.toggleSd()
+                    },
+                    onCategoryClick = { category ->
+                        performHaptic()
+                        when (category) {
+                            "GRAPH" -> viewModel.setMode(CalculatorMode.TABLE)
+                            "Combinatorics" -> viewModel.onKeyPress("nCr(")
+                            "Algebra" -> viewModel.setMode(CalculatorMode.EQUATION)
+                            "Statistic" -> viewModel.setMode(CalculatorMode.STATISTICS)
+                            "Linear Algebra" -> viewModel.setMode(CalculatorMode.MATRIX)
+                            "Number" -> viewModel.setMode(CalculatorMode.BASE_N)
+                            else -> Toast.makeText(context, category, Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 )
